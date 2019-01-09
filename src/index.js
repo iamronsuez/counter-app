@@ -14,6 +14,7 @@ function App() {
     increment,
     decrement,
     onCounterSort,
+    filterBy,
     lib
   } = useCounter();
   const _addCounter = title => create(title);
@@ -23,7 +24,7 @@ function App() {
       <h2>Start adding counters to see some magic happen!</h2>
       <CounterForm onSubmit={title => _addCounter(title)} />
       <hr />
-      <CounterUtils {...lib} onChangeSortFields={onCounterSort} />
+      <CounterUtils {...lib} onChangeSortFields={onCounterSort} onSubmitFilters={filterBy} />
       <hr />
       <div className="counters">
         {Object.values(state).map((item, key) => (

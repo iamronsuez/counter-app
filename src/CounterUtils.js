@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import get from 'lodash/get'
 const noop = () => null;
 const log = (...val) => console.log(...val);
 
-const CounterFilters = ({ options = ["title", "count"], onChange = log }) => {
+const CounterFilters = ({ options = ['title', 'count'], onChange = log }) => {
   const _onChange = (field, order) => {
     onChange({ [field]: order });
   };
@@ -11,14 +12,14 @@ const CounterFilters = ({ options = ["title", "count"], onChange = log }) => {
     <div>
       {options.map((option, key) => {
         return (
-          <div className="box" key={key}>
+          <div className='box' key={key}>
             <label>Sort by: {option}</label>
             <select
               name={`filter-by-${option}`}
               onChange={e => _onChange(option, e.target.value)}
             >
-              <option value="asc">asc</option>
-              <option value="desc">desc</option>
+              <option value='asc'>asc</option>
+              <option value='desc'>desc</option>
             </select>
           </div>
         );
@@ -29,42 +30,55 @@ const CounterFilters = ({ options = ["title", "count"], onChange = log }) => {
 
 const CounterFilter = ({ onSubmit, initialState = {} }) => {
   const [form, updateForm] = useState(initialState);
+  const [isActive, toggleFilter] = useState(true)
+
+  const getResults = (form) => Object.keys(form).reduce((acc, key) => {
+    return Object.assign(acc, ({[key]: get(form, `${key}.value`)}))
+  }, {})
+
+  const updateFormObject = (form, field, value) => Object.assign(form, { [field]: {...get(form, field), value: parseInt(value) }})
+
   const _onSubmit = event => {
-    event.preventDefault();
-    onSubmit();
+    event.preventDefault()
+    onSubmit(getResults(form))
+    toggleFilter(false)
   };
 
   const _onChange = (field, value) => {
-    //updateForm({});
-    console.log(form, { [field]: value });
+    updateForm(updateFormObject(form, field, value)) 
   };
 
+  const _onReset = (event) => {
+    event.preventDefault()
+    onSubmit(getResults(initialState))
+    toggleFilter(true)
+  }
+
   return (
-    <form onSubmit={_onSubmit}>
+    <form onSubmit={_onSubmit} onReset={_onReset}>
       {Object.keys(form).map((label, key) => {
         return (
           <div key={key}>
-            <label> {label} </label>
+            <label> {get(form, `${label}.label`, label)} </label>
             <input
               name={key}
               type="number"
               placeholder="counter title"
-              value={form[label].value}
+              value={get(form, `${label}.value`, 0)}
               onChange={e => _onChange(label || key, e.target.value)}
             />
           </div>
         );
       })}
-      {Object.values(form).length ? <button>Apply Filters</button> : null}
+      { <button type="submit">Apply Filter</button>}
+      
+      { <button disabled={isActive} type="reset">Reset Filter</button>}
+      
     </form>
   );
 };
 
-const CounterUtils = ({ countersSum = noop, onChangeSortFields }) => {
-  const fields = {
-    greather_than: { label: "greather_than" },
-    less_than: { label: "less_than" }
-  };
+const CounterUtils = ({ countersSum = noop, onChangeSortFields, onSubmitFilters }) => {
   return (
     <div>
       <p>Sum of counters is: {countersSum()}</p>
@@ -75,8 +89,17 @@ const CounterUtils = ({ countersSum = noop, onChangeSortFields }) => {
       </div>
 
       <div>
-        <h4>Filters</h4>
-        <CounterFilter onChange={onChangeSortFields} initialState={fields} />
+        <h4>Filters Grather than:</h4>
+        <CounterFilter 
+          onChange={onChangeSortFields} 
+          initialState={{gte: { label: "greather_than", value: 0 }}} onSubmit={onSubmitFilters}/>
+      </div>
+
+      <div>
+        <h4>Filters Lest than:</h4>
+        <CounterFilter 
+          onChange={onChangeSortFields} 
+          initialState={{lte: { label: "less_than", value: 0 }}} onSubmit={onSubmitFilters}/>
       </div>
     </div>
   );

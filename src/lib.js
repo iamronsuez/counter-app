@@ -1,4 +1,4 @@
-import { orderBy } from "lodash";
+import { orderBy, gte, lte, toPairs, isFunction, get, filter } from "lodash";
 /**
  * 
  * Add a named counter to a list of counters OK
@@ -17,13 +17,15 @@ import { orderBy } from "lodash";
 
 class CounterWrapper {
   counters = {};
+  sorters = {};
   filters = {};
   constructor(initialValues = {}) {
     Object.assign(this.counters, initialValues);
   }
 
   getAll = () => {
-    return this.sortCounters({});
+    this.persistCounters()
+    return this.filterCounters({});
   };
 
   addCounter = ({ title }) => {
@@ -61,22 +63,35 @@ class CounterWrapper {
     }, 0);
   };
 
-  filterCounters = () => {
-    console.log("should remove a counter");
-  };
 
   persistCounters = () => {
-    console.log("should persists data");
+    console.log("should persists data", this.counters);
   };
+
+  filterCounters = ({ fields = null }) => {
+    const filterCollection = {gte, lte}
+    if (fields) {
+      this.filters = fields
+    }
+
+    return (toPairs(fields)).reduce((acc, field) => {
+      const [filterFn, valueToMatch] = field
+      const fnToApply = get(filterCollection, filterFn)
+      if (isFunction(fnToApply)) {
+        return filter(acc, ({count}) => fnToApply(count, valueToMatch))
+      }
+      return acc
+    }, this.sortCounters({}))
+  }
 
   sortCounters = ({ fields = null }) => {
     if (fields) {
-      this.filters = fields;
+      this.sorters = fields;
     }
     return orderBy(
       Object.values(this.counters),
-      Object.keys(this.filters),
-      Object.values(this.filters)
+      Object.keys(this.sorters),
+      Object.values(this.sorters)
     );
   };
 

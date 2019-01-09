@@ -13,6 +13,8 @@ const reducer = (state, action) => {
       return CounterWrapper.decrementCounter(payload);
     case "SORT_COUNTERS":
       return CounterWrapper.sortCounters(action);
+    case "FILTER_COUNTERS":
+      return CounterWrapper.filterCounters(action);
     default:
       break;
   }
@@ -49,6 +51,12 @@ const useCounters = () => {
     fields => dispatch({ type: "DECREMENT_COUNTER", ...fields }),
     [dispatch]
   );
+
+  const filterBy = useCallback(
+    fields => dispatch({ type: "FILTER_COUNTERS", fields }),
+    [dispatch]
+  );
+  
   return {
     create,
     remove,
@@ -56,6 +64,7 @@ const useCounters = () => {
     increment,
     decrement,
     onCounterSort,
+    filterBy,
     state,
     lib: CounterWrapper
   };
